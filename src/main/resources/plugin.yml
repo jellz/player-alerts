@@ -2,7 +2,3 @@ name: PlayerAlerts
 version: ${project.version}
 main: com.danielgulic.playeralerts.PlayerAlerts
 api-version: 1.16
-commands:
-  alerts:
-    description: Manage personal alerts
-    usage: /alerts [add|remove] <text|id>

@@ -1,82 +1,69 @@
 package com.danielgulic.playeralerts;
 
+import co.aikar.commands.BaseCommand;
+import co.aikar.commands.annotation.*;
 import org.bukkit.ChatColor;
 import org.bukkit.Material;
 import org.bukkit.Sound;
-import org.bukkit.command.Command;
-import org.bukkit.command.CommandExecutor;
-import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 import org.bukkit.event.inventory.ClickType;
 import xyz.leuo.gooey.button.Button;
 import xyz.leuo.gooey.gui.GUI;
 
-import java.util.Arrays;
-import java.util.HashMap;
+import java.util.Map;
 
-public class AlertsCommand implements CommandExecutor  {
-    @Override
-    public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
-        if (!(sender instanceof Player)) {
-            sender.sendMessage(ChatColor.RED + "Only players can use this command!");
-            return true;
-        }
+@CommandAlias("alerts")
+@Description("Manage your alerts")
+public class AlertsCommand extends BaseCommand {
 
-        Player player = (Player) sender;
+    @Subcommand("list")
+    @Default
+    public static void listAlerts(Player player) {
         AlertDatabase db = PlayerAlerts.get().getDb();
+        Map<Integer, Alert> ownedAlerts = db.getByPlayer(player.getUniqueId());
 
-        if (args.length == 0) {
-            // Open alert list GUI
-            HashMap<Integer, Alert> owned = db.getByPlayer(player.getUniqueId());
-            if (owned.size() > 0) {
-//            owned.values().forEach(a -> player.sendMessage(ChatColor.translateAlternateColorCodes('&', "&e" + a.id + ". &r" + a.text)));
-                int ownedSize = owned.size();
-                int guiSize = ownedSize % 9 == 0 ? ownedSize : ownedSize + (9 - (ownedSize % 9));
-                GUI gui = new GUI(ChatColor.GOLD + "Your Alerts", guiSize);
-                owned.values().forEach(a -> {
-                    Button button = new Button(Material.PAPER, 1, ChatColor.YELLOW + "Alert #" + a.id);
-                    button.setLore(
-                            ChatColor.translateAlternateColorCodes('&', "&7Text: &f" + a.text),
-                            ChatColor.GRAY + "Created: " + ChatColor.WHITE + a.createdAt.toString(),
-                            "",
-                            ChatColor.RED + "Middle click to remove this alert");
-                    button.setAction(new RunCommandAction(ClickType.MIDDLE, "alerts remove " + a.id));
-                    gui.addButton(button);
-                });
-                gui.open(player);
-            } else {
-                sender.sendMessage(ChatColor.RED + "You have no alerts yet.\n" + ChatColor.RED + "Create one with /alerts add <text>");
-                player.playSound(player.getLocation(), Sound.BLOCK_ANVIL_LAND, 0.7F, 8.0F);
-            }
-            return true;
-        } else if (args[0].equalsIgnoreCase("remove") && Util.isInteger(args[1])) {
-            // Remove alert by ID
-            Alert alert = db.get(args[1]);
-            if (alert != null) {
-                if (player.getUniqueId().equals(alert.player)) {
-                    db.remove(alert.id);
-                    player.sendMessage(ChatColor.translateAlternateColorCodes('&', "&eRemoved alert #" + alert.id + ": &r" + alert.text));
-                    player.playSound(player.getLocation(), Sound.BLOCK_NOTE_BLOCK_PLING, 0.7F, 8.0F);
-                } else {
-                    player.sendMessage(ChatColor.RED + "You can only remove your own alerts!");
-                }
-            } else {
-                player.sendMessage(ChatColor.RED + "This alert does not exist!");
-            }
-            return true;
-        } else if (args[0].equalsIgnoreCase("add") && args.length > 1) {
-            // Add alert
-            String[] newArgs = Arrays.copyOfRange(args, 1, args.length);
-            String text = String.join(" ", newArgs);
+        if (ownedAlerts.size() > 0) {
+            int ownedSize = ownedAlerts.size();
+            int guiSize = ownedSize % 9 == 0 ? ownedSize : ownedSize + (9 - (ownedSize % 9)); // Get nearest multiple of 9 for GUI size
 
-            Alert alert = db.add(player.getUniqueId(), text);
+            GUI gui = new GUI(ChatColor.GOLD + "Your Alerts", guiSize);
 
-            player.sendMessage(ChatColor.translateAlternateColorCodes('&', "&eAdded alert #" + alert.id + ": &r" + alert.text + "\n&eView all of your alerts with /alerts!"));
-            player.playSound(player.getLocation(), Sound.BLOCK_ANVIL_FALL, 0.7F, 8.0F);
-            return true;
+            ownedAlerts.values().forEach(a -> {
+                Button button = new Button(Material.PAPER, 1, ChatColor.YELLOW + "Alert #" + a.getId());
+
+                button.setLore(
+                        ChatColor.GRAY + "Text: " + a.getColouredText(),
+                        ChatColor.GRAY + "Created: " + ChatColor.WHITE + a.getCreatedAt().toString(),
+                        "",
+                        ChatColor.RED + "Middle click to remove this alert");
+
+                button.setAction(new RunCommandAction(ClickType.MIDDLE, "alerts remove " + a.getId()));
+                gui.addButton(button);
+            });
+
+            gui.open(player);
         } else {
-            player.sendMessage(ChatColor.RED + "Usage: /alerts [add|remove] <text|id>");
-            return true;
+            player.sendMessage(ChatColor.RED + "You have no alerts yet.\n"
+                    + ChatColor.RED + "Create one with /alerts add <text>");
+            Util.playSound(player, Sound.BLOCK_ANVIL_LAND);
         }
     }
+
+    @Subcommand("add")
+    public static void addAlert(Player player, String text) {
+        AlertDatabase db = PlayerAlerts.get().getDb();
+        Alert alert = db.add(player.getUniqueId(), text);
+        player.sendMessage(ChatColor.YELLOW + "Added alert #" + alert.getId() + ": " + alert.getColouredText() +
+                "\n" + ChatColor.YELLOW + "View all of your alerts with /alerts!");
+        Util.playSound(player, Sound.BLOCK_ANVIL_FALL);
+    }
+
+    @Subcommand("remove")
+    public static void removeAlert(Player player, Alert alert) {
+        AlertDatabase db = PlayerAlerts.get().getDb();
+        db.remove(alert.getId());
+        player.sendMessage(ChatColor.YELLOW + "Removed alert #" + alert.getId() + ": " + alert.getColouredText());
+        Util.playSound(player, Sound.BLOCK_NOTE_BLOCK_PLING);
+    }
+
 }

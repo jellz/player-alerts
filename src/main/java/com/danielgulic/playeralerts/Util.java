@@ -1,18 +1,10 @@
 package com.danielgulic.playeralerts;
 
-import java.util.Scanner;
+import org.bukkit.Sound;
+import org.bukkit.entity.Player;
 
 public class Util {
-    public static boolean isInteger(String s) {
-        return isInteger(s,10);
+    public static void playSound(Player player, Sound sound) {
+        player.playSound(player.getLocation(), sound, 0.7F, 8.0F);
     }
-
-    public static boolean isInteger(String s, int radix) {
-        Scanner sc = new Scanner(s.trim());
-        if(!sc.hasNextInt(radix)) return false;
-        sc.nextInt(radix);
-        return !sc.hasNext();
-    }
-
-
 }
