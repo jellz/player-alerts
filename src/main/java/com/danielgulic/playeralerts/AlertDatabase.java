@@ -1,19 +1,16 @@
 package com.danielgulic.playeralerts;
 
 import java.util.HashMap;
+import java.util.Map;
 import java.util.UUID;
 
 public class AlertDatabase {
-    private final HashMap<Integer, Alert> db;
+    private final Map<Integer, Alert> db;
     private int currentId;
 
     public AlertDatabase() {
         db = new HashMap<>();
         currentId = 0;
-    }
-
-    public HashMap<Integer, Alert> getHashMap() {
-        return db;
     }
 
     public Alert add(UUID player, String text) {
@@ -34,11 +31,9 @@ public class AlertDatabase {
         return db.get(id);
     }
 
-    public HashMap<Integer, Alert> getByPlayer(UUID player) {
-        HashMap<Integer, Alert> owned = new HashMap<>(db);
-        owned.values().removeIf(a -> !a.player.equals(player));
+    public Map<Integer, Alert> getByPlayer(UUID player) {
+        Map<Integer, Alert> owned = new HashMap<>(db);
+        owned.values().removeIf(a -> !a.getPlayer().equals(player));
         return owned;
     }
-
-
 }

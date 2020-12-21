@@ -25,6 +25,9 @@
                 <configuration>
                     <source>${java.version}</source>
                     <target>${java.version}</target>
+                    <compilerArgs>
+                        <arg>-parameters</arg>
+                    </compilerArgs>
                 </configuration>
             </plugin>
             <plugin>
@@ -39,10 +42,21 @@
                         </goals>
                         <configuration>
                             <createDependencyReducedPom>false</createDependencyReducedPom>
+                            <relocations>
+                                <relocation>
+                                    <pattern>co.aikar.commands</pattern>
+                                    <shadedPattern>com.danielgulic.playeralerts.acf</shadedPattern> <!-- Replace this -->
+                                </relocation>
+                                <relocation>
+                                    <pattern>co.aikar.locales</pattern>
+                                    <shadedPattern>com.danielgulic.playeralerts.locales</shadedPattern> <!-- Replace this -->
+                                </relocation>
+                            </relocations>
                         </configuration>
                     </execution>
                 </executions>
             </plugin>
+
         </plugins>
         <resources>
             <resource>
@@ -65,6 +79,10 @@
             <id>jitpack.io</id>
             <url>https://jitpack.io</url>
         </repository>
+        <repository>
+            <id>aikar</id>
+            <url>https://repo.aikar.co/content/groups/aikar/</url>
+        </repository>
     </repositories>
 
     <dependencies>
@@ -78,6 +96,11 @@
             <groupId>com.github.blomer</groupId>
             <artifactId>Gooey</artifactId>
             <version>64f1d77</version>
+        </dependency>
+        <dependency>
+            <groupId>co.aikar</groupId>
+            <artifactId>acf-paper</artifactId> <!-- Don't forget to replace this -->
+            <version>0.5.0-SNAPSHOT</version> <!-- Replace this as well -->
         </dependency>
     </dependencies>
 </project>
